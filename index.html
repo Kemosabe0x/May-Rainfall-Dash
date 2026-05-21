@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NYC May Rainfall Predictive Dashboard</title>
+    <!-- Version‑pinned CDN links for stability -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
@@ -32,14 +33,10 @@
 
     <script type="text/babel">
         const { useState, useEffect } = React;
-        const Recharts = window.Recharts || window.recharts;
-        if (!Recharts || !Recharts.ComposedChart) {
-            console.error('Recharts failed to load — check CDN scripts (React, prop-types, recharts@2.x).');
-        }
         const { 
             LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
             Tooltip, Legend, ResponsiveContainer, ReferenceLine, AreaChart, Area, ComposedChart
-        } = Recharts || {};
+        } = window.Recharts;
 
         // Formatted 50-year dataset (1976 - 2026)
         const rainfallData = [
@@ -96,6 +93,200 @@
             { year: 2026, jan: 2.7, feb: 2.6, mar: 3.6, apr: 2.48, may: null, mayAvg: null, springCum: 11.38 }
         ];
 
+        const PositionCalculator = () => {
+            // Current Position State
+            const [posDir, setPosDir] = useState('yes');
+            const [posQty, setPosQty] = useState(5);
+            const [posPrice, setPosPrice] = useState(49.5);
+            const [posTotal, setPosTotal] = useState(247.5);
+
+            // Modification State
+            const [modDir, setModDir] = useState('yes');
+            const [modQty, setModQty] = useState(1);
+            const [modPrice, setModPrice] = useState(35.0);
+
+            // Sync Total Cost and Avg Price for Current Position
+            const handlePosQtyChange = (e) => {
+                const val = parseFloat(e.target.value) || 0;
+                setPosQty(val);
+                setPosTotal(val * posPrice);
+            };
+
+            const handlePosPriceChange = (e) => {
+                const val = parseFloat(e.target.value) || 0;
+                setPosPrice(val);
+                setPosTotal(val * posQty);
+            };
+
+            const handlePosTotalChange = (e) => {
+                const val = parseFloat(e.target.value) || 0;
+                setPosTotal(val);
+                if (posQty > 0) setPosPrice(val / posQty);
+            };
+
+            // Calculate Results
+            let resDir = posDir;
+            let resQty = posQty;
+            let resTotal = posTotal;
+            let resAvg = posPrice;
+            let statusStr = "Unchanged";
+
+            if (modQty > 0) {
+                if (posDir === modDir) {
+                    // Increasing Position
+                    resQty = posQty + modQty;
+                    resTotal = posTotal + (modQty * modPrice);
+                    resAvg = resQty > 0 ? resTotal / resQty : 0;
+                    statusStr = "Increased Position";
+                } else {
+                    // Opposite Direction (Closing or Flipping)
+                    if (posQty > modQty) {
+                        resQty = posQty - modQty;
+                        resAvg = posPrice; // Avg price remains unchanged for remaining shares
+                        resTotal = resQty * resAvg;
+                        statusStr = "Reduced Position";
+                    } else if (posQty < modQty) {
+                        resQty = modQty - posQty;
+                        resDir = modDir;
+                        resAvg = modPrice;
+                        resTotal = resQty * resAvg;
+                        statusStr = `Flipped Position to ${modDir.toUpperCase()}`;
+                    } else {
+                        resQty = 0;
+                        resTotal = 0;
+                        resAvg = 0;
+                        statusStr = "Closed Position";
+                    }
+                }
+            }
+
+            const potentialProfit = (resQty * 100) - resTotal;
+            const currentTextColor = posDir === 'yes' ? 'text-emerald-400' : 'text-rose-400';
+            const modTextColor = modDir === 'yes' ? 'text-emerald-400' : 'text-rose-400';
+            const resTextColor = resDir === 'yes' ? 'text-emerald-400' : 'text-rose-400';
+
+            return (
+                <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
+                    <div className="mb-4">
+                        <h2 className="text-xl font-bold text-white">Prediction Market Average Cost Calculator</h2>
+                        <p className="text-sm text-slate-400">Dynamically model your average cost when adding to, reducing, or flipping a position.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {}
+                        {/* Current Position Panel */}
+                        <div className="glass-panel p-5 border-t-4 border-slate-600">
+                            <h3 className="text-slate-300 font-semibold mb-4 flex items-center">
+                                1. Current Position
+                            </h3>
+                            
+                            <div className="space-y-4">
+                                <div className="flex space-x-4 mb-4">
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                        <input type="radio" name="posDir" value="yes" checked={posDir === 'yes'} onChange={() => setPosDir('yes')} className="w-4 h-4 text-emerald-500 bg-slate-700 border-slate-600 focus:ring-emerald-500" />
+                                        <span className={posDir === 'yes' ? 'text-emerald-400 font-bold' : 'text-slate-400'}>YES</span>
+                                    </label>
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                        <input type="radio" name="posDir" value="no" checked={posDir === 'no'} onChange={() => setPosDir('no')} className="w-4 h-4 text-rose-500 bg-slate-700 border-slate-600 focus:ring-rose-500" />
+                                        <span className={posDir === 'no' ? 'text-rose-400 font-bold' : 'text-slate-400'}>NO</span>
+                                    </label>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">Position Qty (Shares)</label>
+                                    <input type="number" value={posQty} onChange={handlePosQtyChange} className={`w-full bg-slate-800 border border-slate-600 rounded p-2 focus:outline-none focus:border-blue-500 font-bold ${currentTextColor}`} />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs text-slate-400 mb-1">Avg Price (¢)</label>
+                                        <input type="number" value={posPrice} onChange={handlePosPriceChange} step="0.1" className="w-full bg-slate-800 border border-slate-600 rounded p-2 focus:outline-none focus:border-blue-500 text-white" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs text-slate-400 mb-1">Total Cost (¢)</label>
+                                        <input type="number" value={posTotal} onChange={handlePosTotalChange} step="0.1" className="w-full bg-slate-800 border border-slate-600 rounded p-2 focus:outline-none focus:border-blue-500 text-white" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {}
+                        {/* Modification Panel */}
+                        <div className="glass-panel p-5 border-t-4 border-blue-600">
+                            <h3 className="text-slate-300 font-semibold mb-4 flex items-center">
+                                2. New Transaction
+                            </h3>
+                            
+                            <div className="space-y-4">
+                                <div className="flex space-x-4 mb-4">
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                        <input type="radio" name="modDir" value="yes" checked={modDir === 'yes'} onChange={() => setModDir('yes')} className="w-4 h-4 text-emerald-500 bg-slate-700 border-slate-600 focus:ring-emerald-500" />
+                                        <span className={modDir === 'yes' ? 'text-emerald-400 font-bold' : 'text-slate-400'}>BUY YES</span>
+                                    </label>
+                                    <label className="flex items-center space-x-2 cursor-pointer">
+                                        <input type="radio" name="modDir" value="no" checked={modDir === 'no'} onChange={() => setModDir('no')} className="w-4 h-4 text-rose-500 bg-slate-700 border-slate-600 focus:ring-rose-500" />
+                                        <span className={modDir === 'no' ? 'text-rose-400 font-bold' : 'text-slate-400'}>BUY NO</span>
+                                    </label>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">New Qty (Shares)</label>
+                                    <input type="number" value={modQty} onChange={(e) => setModQty(parseFloat(e.target.value) || 0)} className={`w-full bg-slate-800 border border-slate-600 rounded p-2 focus:outline-none focus:border-blue-500 font-bold ${modTextColor}`} />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs text-slate-400 mb-1">Purchase Price (¢)</label>
+                                    <input type="number" value={modPrice} onChange={(e) => setModPrice(parseFloat(e.target.value) || 0)} step="0.1" className="w-full bg-slate-800 border border-slate-600 rounded p-2 focus:outline-none focus:border-blue-500 text-white" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {}
+                    {/* Results Panel */}
+                    <div className={`glass-panel p-6 border-l-4 ${resQty > 0 ? (resDir === 'yes' ? 'border-l-emerald-500' : 'border-l-rose-500') : 'border-l-slate-500'} relative overflow-hidden`}>
+                        {/* Background flare */}
+                        <div className={`absolute top-0 right-0 w-32 h-32 blur-3xl opacity-10 rounded-full pointer-events-none ${resDir === 'yes' ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
+                        
+                        <h3 className="text-slate-400 text-sm font-semibold uppercase tracking-wide mb-4">Resulting Position ({statusStr})</h3>
+                        
+                        {resQty > 0 ? (
+                            <>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div>
+                                        <p className="text-xs text-slate-500">Direction</p>
+                                        <p className={`text-2xl font-bold uppercase ${resTextColor}`}>{resDir}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-slate-500">Total Shares</p>
+                                        <p className={`text-2xl font-bold text-white`}>{resQty}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-slate-500">New Avg Price</p>
+                                        <p className={`text-2xl font-bold text-white`}>{resAvg.toFixed(2)}¢</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-slate-500">Total Capital Cost</p>
+                                        <p className={`text-2xl font-bold text-white`}>{(resTotal / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</p>
+                                    </div>
+                                </div>
+                                <div className="mt-6 pt-4 border-t border-slate-700/50">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-slate-400">Max Potential Profit (if resolved {resDir}):</span>
+                                        <span className="text-xl font-bold text-green-400">+{(potentialProfit / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</span>
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="py-4 text-center">
+                                <p className="text-slate-400 italic">Position is completely closed.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
         const Dashboard = () => {
             const [view, setView] = useState('mayTrend');
             
@@ -151,7 +342,7 @@
                             <p className="text-xs text-slate-500 mt-1">"Post-Deluge" pattern favors wet next year</p>
                         </div>
                         <div className="glass-panel p-6 border-l-4 border-l-purple-500">
-                            <h3 className="text-slate-400 text-sm font-semibold uppercase tracking-wide">Historical Prob. May over 4"</h3>
+                            <h3 className="text-slate-400 text-sm font-semibold uppercase tracking-wide">Historical Prob. May > 4"</h3>
                             <div className="mt-2 flex items-baseline">
                                 <span className="text-4xl font-bold text-white">66.7%</span>
                                 <span className="ml-2 text-sm text-slate-300">Win Rate</span>
@@ -162,30 +353,38 @@
 
                     {}
                     {/* Navigation */}
-                    <div className="flex space-x-2 border-b border-slate-700 pb-2">
+                    <div className="flex space-x-2 border-b border-slate-700 pb-2 overflow-x-auto">
                         <button 
                             onClick={() => setView('mayTrend')}
-                            className={`px-4 py-2 rounded-t-lg font-semibold transition-colors ${view === 'mayTrend' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                            className={`px-4 py-2 whitespace-nowrap rounded-t-lg font-semibold transition-colors ${view === 'mayTrend' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
                         >
                             May Historical Trend
                         </button>
                         <button 
                             onClick={() => setView('springDeficit')}
-                            className={`px-4 py-2 rounded-t-lg font-semibold transition-colors ${view === 'springDeficit' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                            className={`px-4 py-2 whitespace-nowrap rounded-t-lg font-semibold transition-colors ${view === 'springDeficit' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
                         >
                             Spring Deficit Tracker
                         </button>
                         <button 
                             onClick={() => setView('similarYears')}
-                            className={`px-4 py-2 rounded-t-lg font-semibold transition-colors ${view === 'similarYears' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                            className={`px-4 py-2 whitespace-nowrap rounded-t-lg font-semibold transition-colors ${view === 'similarYears' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
                         >
                             Pattern Matches
+                        </button>
+                        <button 
+                            onClick={() => setView('calculator')}
+                            className={`px-4 py-2 whitespace-nowrap rounded-t-lg font-semibold transition-colors ${view === 'calculator' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                        >
+                            Position Calculator
                         </button>
                     </div>
 
                     {/* Chart Area */}
                     <div className="glass-panel p-6 min-h-[500px]">
                         
+                        {view === 'calculator' && <PositionCalculator />}
+
                         {view === 'mayTrend' && (
                             <div className="h-full flex flex-col">
                                 <div className="mb-4">
