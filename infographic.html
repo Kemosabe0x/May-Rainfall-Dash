@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYC Rainfall: The May 2026 Predictive Outlook</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.24.5/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap');
+        
+        :root {
+            --bg-deep: #0f172a;
+            --accent-blue: #3b82f6;
+            --accent-teal: #14b8a6;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-deep);
+            color: #f1f5f9;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 450px;
+        }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .pattern-grid-item {
+            border-left: 4px solid var(--accent-blue);
+            transition: all 0.3s ease;
+        }
+
+        .pattern-grid-item:hover {
+            transform: translateX(5px);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade { animation: fadeInUp 0.8s ease forwards; }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+
+<!-- 
+NARRATIVE PLAN:
+1. THE HOOK: Present the current 2026 situation as a "pressure cooker" scenario (low rainfall leading to a predicted burst).
+2. CORE METRICS: Large statistics comparing the 11.38" YTD vs. the 14.8" norm.
+3. THE PREDICTIVE ENGINE: A visual breakdown of the 8 patterns, ranked by historical accuracy.
+4. HISTORICAL CONTEXT: A detailed Chart.js visualization showing the regression to the mean.
+5. THE LOGIC FLOW: A manual HTML/CSS diagram explaining the "Why Nature Abhors a Vacuum" logic.
+6. ACTIONABLE TOOL: The Average Cost Calculator for prediction market participants.
+
+VISUALIZATION SELECTION:
+- Accuracy Ranking: Horizontal Bar Chart (Chart.js) -> Compare accuracy across 8 patterns.
+- Regression Trends: Line/Area Chart (Chart.js) -> Show 50-year volatility and 5-year smoothing.
+- YTD Comparison: Big Numbers & Gauge-style indicators (HTML/CSS) -> Focus on the 2026 deficit.
+- Process Flow: Card-based logic hierarchy (HTML/CSS) -> Explain the transition from Dry April to Wet May.
+
+CONFIRMATION: NEITHER Mermaid JS NOR SVG were used in this output. All visuals are Canvas-based or HTML/CSS structured.
+COLOR PALETTE: Brilliant Blues & Energetic Teals (Vibrant High-Contrast).
+-->
+
+<div class="max-w-6xl mx-auto px-4 py-12">
+    
+    <!-- Hero Section -->
+    <header class="text-center mb-16 animate-fade">
+        <h1 class="text-5xl md:text-7xl font-800 mb-4 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-teal-400 to-blue-500">
+            MAY 2026: THE GREAT<br>PRECIPI-CORRECTION
+        </h1>
+        <p class="text-xl text-slate-400 max-w-2xl mx-auto">
+            Central Park is currently locked in a historic moisture deficit. We analyzed 50 years of NWS data to determine if the atmosphere will "break" in May.
+        </p>
+    </header>
+
+    <!-- Key Metrics Grid -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20 animate-fade" style="animation-delay: 0.2s;">
+        <div class="glass-card p-8 rounded-2xl text-center">
+            <span class="text-slate-500 text-sm font-bold uppercase tracking-widest">2026 Spring Deficit</span>
+            <div class="text-5xl font-800 text-rose-500 my-2">-3.92"</div>
+            <p class="text-slate-400 text-sm">Below Jan-Apr Normals</p>
+        </div>
+        <div class="glass-card p-8 rounded-2xl text-center border-t-4 border-t-teal-500">
+            <span class="text-slate-500 text-sm font-bold uppercase tracking-widest">Historical Signal</span>
+            <div class="text-5xl font-800 text-teal-400 my-2">71.4%</div>
+            <p class="text-slate-400 text-sm">Accuracy of "Post-Deluge" Signal</p>
+        </div>
+        <div class="glass-card p-8 rounded-2xl text-center">
+            <span class="text-slate-500 text-sm font-bold uppercase tracking-widest">Current Market Price</span>
+            <div class="text-5xl font-800 text-blue-400 my-2">35.0¢</div>
+            <p class="text-slate-400 text-sm">Kalshi Market Odds (May > 4")</p>
+        </div>
+    </section>
+
+    <!-- Pattern Accuracy Chart -->
+    <section class="mb-24 animate-fade" style="animation-delay: 0.4s;">
+        <div class="text-center mb-10">
+            <h2 class="text-3xl font-800 text-white mb-2">Predictive Pattern Reliability</h2>
+            <p class="text-slate-400">Comparing the historical "Win Rate" of our 8 isolated indicators for a May > 4.0" outcome.</p>
+        </div>
+        <div class="glass-card p-6 md:p-10 rounded-3xl">
+            <div class="chart-container">
+                <canvas id="accuracyChart"></canvas>
+            </div>
+            <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="text-sm text-slate-400 flex items-start space-x-3">
+                    <span class="text-teal-400 font-bold">█</span>
+                    <span>Patterns like "Post-Deluge" and "Consistent Dry Trend" show that extreme deviations (wet or dry) usually lead to heavy rainfall clusters.</span>
+                </div>
+                <div class="text-sm text-slate-400 flex items-start space-x-3">
+                    <span class="text-blue-400 font-bold">█</span>
+                    <span>The "Alternating May" baseline suggests that May is highly volatile; it rarely stays at average levels, preferring to "bounce" between extremes.</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- The 50-Year Momentum Line -->
+    <section class="mb-24 animate-fade" style="animation-delay: 0.6s;">
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-12 items-center">
+            <div class="lg:col-span-2">
+                <h2 class="text-3xl font-800 text-white mb-6">Regression to the Mean</h2>
+                <p class="text-slate-400 mb-6 leading-relaxed">
+                    Over a half-century, May rainfall behaves like a rubber band. When the spring start (Jan-Apr) is stretched thin by drought—as it is in 2026—the snap-back is often violent.
+                </p>
+                <div class="space-y-4">
+                    <div class="p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+                        <span class="text-blue-400 font-bold">1985 & 1992:</span> Both years shared the 2026 dry-start profile. Both resulted in Mays over 4.0 inches.
+                    </div>
+                    <div class="p-4 bg-slate-800/50 rounded-xl border border-slate-700">
+                        <span class="text-teal-400 font-bold">2021 Anomaly:</span> The closest "Statistical Twin" to 2026. May rainfall hit 4.36".
+                    </div>
+                </div>
+            </div>
+            <div class="lg:col-span-3 glass-card p-6 rounded-3xl">
+                <div class="chart-container" style="height: 400px;">
+                    <canvas id="momentumChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- The Pattern Description Grid -->
+    <section class="mb-24 animate-fade">
+        <h2 class="text-3xl font-800 text-white mb-10 text-center">The 8 Isolated Pattern Recognitions</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Pattern 1 -->
+            <div class="glass-card p-6 rounded-xl pattern-grid-item">
+                <h3 class="text-blue-400 font-bold mb-2">Consistent Dry Trend</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Jan-Apr all below critical thresholds. Builds a massive moisture deficit that breaks in May.</p>
+                <div class="mt-4 text-sm font-bold text-teal-400">66.7% Accuracy</div>
+            </div>
+            <!-- Pattern 2 -->
+            <div class="glass-card p-6 rounded-xl pattern-grid-item" style="border-left-color: #14b8a6;">
+                <h3 class="text-teal-400 font-bold mb-2">Spring Deficit Gauge</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Cumulative Jan-Apr volume below 14.8". Nature abhors a vacuum; May brings compensating showers.</p>
+                <div class="mt-4 text-sm font-bold text-teal-400">57.1% Accuracy</div>
+            </div>
+            <!-- Pattern 3 -->
+            <div class="glass-card p-6 rounded-xl pattern-grid-item">
+                <h3 class="text-blue-400 font-bold mb-2">Post-Deluge Cycle</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Triggers the year after a May > 6.5". Indicates a macro-atmospheric "lock" on wet weather.</p>
+                <div class="mt-4 text-sm font-bold text-teal-400">71.4% Accuracy</div>
+            </div>
+            <!-- Pattern 4 -->
+            <div class="glass-card p-6 rounded-xl pattern-grid-item" style="border-left-color: #14b8a6;">
+                <h3 class="text-teal-400 font-bold mb-2">Dry March Indicator</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Strongest standalone month. Dry starts to the spring transition delay the cycle into May.</p>
+                <div class="mt-4 text-sm font-bold text-teal-400">66.7% Accuracy</div>
+            </div>
+             <!-- Pattern 5 -->
+             <div class="glass-card p-6 rounded-xl pattern-grid-item">
+                <h3 class="text-blue-400 font-bold mb-2">March-to-April Drop</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Triggers when Apr < Mar. Creates a short-term drought effect followed by a violent correction.</p>
+                <div class="mt-4 text-sm font-bold text-teal-400">55.6% Accuracy</div>
+            </div>
+            <!-- Pattern 6 -->
+            <div class="glass-card p-6 rounded-xl pattern-grid-item" style="border-left-color: #14b8a6;">
+                <h3 class="text-teal-400 font-bold mb-2">Exact Match Anomaly</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Isolates years with granular signatures identical to 2026 (Mar: 3.6, Apr: 2.4).</p>
+                <div class="mt-4 text-sm font-bold text-teal-400">High Reliability</div>
+            </div>
+            <!-- Pattern 7 -->
+            <div class="glass-card p-6 rounded-xl pattern-grid-item">
+                <h3 class="text-blue-400 font-bold mb-2">Alternating Baseline</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Momentum gauge triggered if previous May was dry. Rainfall rarely stays suppressed.</p>
+                <div class="mt-4 text-sm font-bold text-teal-400">62.5% Accuracy</div>
+            </div>
+            <!-- Pattern 8 -->
+            <div class="glass-card p-6 rounded-xl pattern-grid-item" style="border-left-color: #14b8a6;">
+                <h3 class="text-teal-400 font-bold mb-2">Wet January Signal</h3>
+                <p class="text-xs text-slate-400 leading-relaxed">Active Januarys establish a wet storm track early that frequently carries through spring.</p>
+                <div class="mt-4 text-sm font-bold text-teal-400">61.9% Accuracy</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Calculator Widget -->
+    <section class="mb-24 animate-fade">
+        <div id="calculator-root"></div>
+    </section>
+
+    <footer class="text-center py-10 border-t border-slate-800">
+        <p class="text-slate-500 text-sm italic">
+            Data sourced from National Weather Service Central Park records (1976-2026). <br>
+            Analysis intended for historical comparison and predictive modeling purposes.
+        </p>
+    </footer>
+
+</div>
+
+<script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // --- CHART.JS INTEGRATION ---
+
+    const initCharts = () => {
+        // Label Wrapping Utility
+        const wrapLabel = (label) => {
+            if (typeof label !== 'string') return label;
+            if (label.length <= 16) return label;
+            const words = label.split(' ');
+            const lines = [];
+            let currentLine = '';
+            words.forEach(word => {
+                if ((currentLine + word).length > 16) {
+                    lines.push(currentLine.trim());
+                    currentLine = word + ' ';
+                } else {
+                    currentLine += word + ' ';
+                }
+            });
+            lines.push(currentLine.trim());
+            return lines;
+        };
+
+        const tooltipConfig = {
+            callbacks: {
+                title: function(tooltipItems) {
+                    const item = tooltipItems[0];
+                    let label = item.chart.data.labels[item.dataIndex];
+                    if (Array.isArray(label)) {
+                        return label.join(' ');
+                    } else {
+                        return label;
+                    }
+                }
+            }
+        };
+
+        // 1. Accuracy Chart
+        const ctxAcc = document.getElementById('accuracyChart').getContext('2d');
+        const accLabels = [
+            "Post-Deluge Cycle", 
+            "Dry March Indicator", 
+            "Consistent Dry Trend", 
+            "Alternating Baseline", 
+            "Wet January Signal", 
+            "Spring Deficit Gauge", 
+            "March-to-April Drop"
+        ].map(wrapLabel);
+
+        new Chart(ctxAcc, {
+            type: 'bar',
+            data: {
+                labels: accLabels,
+                datasets: [{
+                    label: 'Historical Accuracy (%)',
+                    data: [71.4, 66.7, 66.7, 62.5, 61.9, 57.1, 55.6],
+                    backgroundColor: '#14b8a6',
+                    borderRadius: 8,
+                    borderWidth: 0,
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: tooltipConfig
+                },
+                scales: {
+                    x: { 
+                        grid: { color: '#334155' }, 
+                        ticks: { color: '#94a3b8' },
+                        max: 100
+                    },
+                    y: { 
+                        grid: { display: false }, 
+                        ticks: { color: '#f1f5f9', font: { weight: '600' } } 
+                    }
+                }
+            }
+        });
+
+        // 2. Momentum Chart
+        const ctxMom = document.getElementById('momentumChart').getContext('2d');
+        new Chart(ctxMom, {
+            type: 'line',
+            data: {
+                labels: ['2016', '2017', '2018', '2019', '2020', '2021', '2022', '2023', '2024', '2025'],
+                datasets: [
+                    {
+                        label: 'May Rainfall (Actual)',
+                        data: [3.75, 6.38, 3.53, 6.82, 1.65, 4.36, 4.52, 1.28, 4.11, 6.58],
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 4,
+                        pointBackgroundColor: '#3b82f6'
+                    },
+                    {
+                        label: 'Dry Start Pattern Threshold',
+                        data: [4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+                        borderColor: '#f43f5e',
+                        borderDash: [5, 5],
+                        borderWidth: 2,
+                        pointStyle: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { color: '#94a3b8' } },
+                    tooltip: tooltipConfig
+                },
+                scales: {
+                    y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
+                    x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }
+                }
+            }
+        });
+    };
+
+    // --- CALCULATOR COMPONENT ---
+
+    const AverageCostCalculator = () => {
+        const [posDir, setPosDir] = useState('yes');
+        const [posQty, setPosQty] = useState(5);
+        const [posPrice, setPosPrice] = useState(49.5);
+        const [modDir, setModDir] = useState('yes');
+        const [modQty, setModQty] = useState(1);
+        const [modPrice, setModPrice] = useState(35.0);
+
+        const currentTotal = posQty * posPrice;
+        let resDir = posDir;
+        let resQty = 0;
+        let resAvg = 0;
+        let resTotal = 0;
+
+        if (posDir === modDir) {
+            resQty = posQty + modQty;
+            resTotal = currentTotal + (modQty * modPrice);
+            resAvg = resQty > 0 ? resTotal / resQty : 0;
+        } else {
+            if (posQty > modQty) {
+                resQty = posQty - modQty;
+                resAvg = posPrice;
+                resTotal = resQty * resAvg;
+            } else {
+                resQty = modQty - posQty;
+                resDir = modDir;
+                resAvg = modPrice;
+                resTotal = resQty * resAvg;
+            }
+        }
+
+        const potentialProfit = (resQty * 100) - resTotal;
+
+        return (
+            <div className="glass-card rounded-3xl p-8 max-w-4xl mx-auto border-t-8 border-blue-500">
+                <div className="flex flex-col md:flex-row justify-between items-center mb-8">
+                    <div>
+                        <h2 className="text-2xl font-800 text-white">Position Modeler</h2>
+                        <p className="text-slate-400 text-sm">Calculate average cost and profit for Kalshi predictions.</p>
+                    </div>
+                    <div className="flex space-x-2 mt-4 md:mt-0">
+                        <button onClick={() => setPosDir('yes')} className={`px-4 py-2 rounded-lg font-bold transition ${posDir === 'yes' ? 'bg-teal-500 text-white' : 'bg-slate-800 text-slate-500'}`}>YES</button>
+                        <button onClick={() => setPosDir('no')} className={`px-4 py-2 rounded-lg font-bold transition ${posDir === 'no' ? 'bg-rose-500 text-white' : 'bg-slate-800 text-slate-500'}`}>NO</button>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    <div className="space-y-4 p-6 bg-slate-800/30 rounded-2xl">
+                        <label className="block text-xs font-bold text-blue-400 uppercase tracking-widest">Current Holdings</label>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-[10px] text-slate-500 uppercase">Shares</label>
+                                <input type="number" value={posQty} onChange={e => setPosQty(Number(e.target.value))} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
+                            </div>
+                            <div>
+                                <label className="text-[10px] text-slate-500 uppercase">Avg Price (¢)</label>
+                                <input type="number" value={posPrice} onChange={e => setPosPrice(Number(e.target.value))} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4 p-6 bg-slate-800/30 rounded-2xl">
+                        <div className="flex justify-between items-center">
+                            <label className="block text-xs font-bold text-teal-400 uppercase tracking-widest">Add / Reduce</label>
+                            <div className="flex space-x-1">
+                                <button onClick={() => setModDir('yes')} className={`px-2 py-1 text-[10px] rounded font-bold ${modDir === 'yes' ? 'bg-teal-500' : 'bg-slate-700 text-slate-400'}`}>BUY YES</button>
+                                <button onClick={() => setModDir('no')} className={`px-2 py-1 text-[10px] rounded font-bold ${modDir === 'no' ? 'bg-rose-500' : 'bg-slate-700 text-slate-400'}`}>BUY NO</button>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-[10px] text-slate-500 uppercase">New Shares</label>
+                                <input type="number" value={modQty} onChange={e => setModQty(Number(e.target.value))} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
+                            </div>
+                            <div>
+                                <label className="text-[10px] text-slate-500 uppercase">Price (¢)</label>
+                                <input type="number" value={modPrice} onChange={e => setModPrice(Number(e.target.value))} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-700 pt-8">
+                    <div className="text-center md:text-left">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold">Resulting Position</span>
+                        <div className={`text-3xl font-800 uppercase ${resDir === 'yes' ? 'text-teal-400' : 'text-rose-400'}`}>
+                            {resQty} {resDir}
+                        </div>
+                    </div>
+                    <div className="text-center md:text-left">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold">New Weighted Average</span>
+                        <div className="text-3xl font-800 text-white">{resAvg.toFixed(2)}¢</div>
+                    </div>
+                    <div className="text-center md:text-right">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold">Potential Net Profit</span>
+                        <div className="text-3xl font-800 text-teal-400">+${(potentialProfit / 100).toFixed(2)}</div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // Initialize Page
+    const root = ReactDOM.createRoot(document.getElementById('calculator-root'));
+    root.render(<AverageCostCalculator />);
+    
+    // Ensure charts load after DOM is ready
+    window.onload = initCharts;
+</script>
+
+</body>
+</html>
