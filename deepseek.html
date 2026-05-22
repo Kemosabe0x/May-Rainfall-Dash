@@ -1,210 +1,310 @@
-const Dashboard = () => {
-    const [view, setView] = useState('mayTrend');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NYC May Rainfall Predictive Dashboard</title>
+    <!-- Version‑pinned CDN links for stability -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.24.5/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     
-    // Historical Averages
-    const avgSpringCum = 15.3;
-    const avgMay = 4.2;
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a; /* Slate 900 */
+            color: #f8fafc; /* Slate 50 */
+        }
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7); /* Slate 800 */
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
 
-    // Custom Tooltip for Charts
-    const CustomTooltip = ({ active, payload, label }) => {
-        if (active && payload && payload.length) {
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { 
+            LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
+            Tooltip, Legend, ResponsiveContainer, ReferenceLine, AreaChart, Area, ComposedChart
+        } = window.Recharts;
+
+        // Formatted 50-year dataset (1976 - 2026)
+        const rainfallData = [
+            // … (your entire data array remains exactly the same) …
+            { year: 1976, jan: 5.78, feb: 3.13, mar: 2.99, apr: 2.8, may: 4.77, mayAvg: null, springCum: 14.70 },
+            { year: 1977, jan: 2.25, feb: 2.51, mar: 7.41, apr: 3.75, may: 1.71, mayAvg: null, springCum: 15.92 },
+            { year: 1978, jan: 8.27, feb: 1.59, mar: 2.73, apr: 2.38, may: 9.15, mayAvg: null, springCum: 14.97 },
+            { year: 1979, jan: 10.52, feb: 4.58, mar: 4.4, apr: 4.04, may: 6.23, mayAvg: null, springCum: 23.54 },
+            { year: 1980, jan: 1.72, feb: 1.04, mar: 10.41, apr: 8.26, may: 2.33, mayAvg: 4.838, springCum: 21.43 },
+            { year: 1981, jan: 0.58, feb: 6.04, mar: 1.19, apr: 3.42, may: 3.56, mayAvg: 4.596, springCum: 11.23 },
+            { year: 1982, jan: 6.46, feb: 2.37, mar: 2.56, apr: 5.67, may: 2.43, mayAvg: 4.740, springCum: 17.06 },
+            { year: 1983, jan: 5.01, feb: 3.22, mar: 10.54, apr: 14.01, may: 4.6, mayAvg: 3.830, springCum: 32.78 },
+            { year: 1984, jan: 1.87, feb: 4.86, mar: 6.3, apr: 6.62, may: 9.74, mayAvg: 4.532, springCum: 19.65 },
+            { year: 1985, jan: 1.0, feb: 2.41, mar: 1.91, apr: 1.41, may: 5.72, mayAvg: 5.210, springCum: 6.73 },
+            { year: 1986, jan: 4.23, feb: 2.86, mar: 1.46, apr: 3.93, may: 1.68, mayAvg: 4.834, springCum: 12.48 },
+            { year: 1987, jan: 5.81, feb: 1.01, mar: 4.93, apr: 5.9, may: 1.45, mayAvg: 4.638, springCum: 17.65 },
+            { year: 1988, jan: 3.64, feb: 3.91, mar: 5.27, apr: 2.2, may: 2.1, mayAvg: 4.138, springCum: 15.02 },
+            { year: 1989, jan: 2.29, feb: 3.03, mar: 4.93, apr: 4.26, may: 10.24, mayAvg: 4.238, springCum: 14.51 },
+            { year: 1990, jan: 5.34, feb: 2.33, mar: 3.64, apr: 5.12, may: 9.1, mayAvg: 4.914, springCum: 16.43 },
+            { year: 1991, jan: 3.38, feb: 1.93, mar: 5.16, apr: 3.68, may: 3.11, mayAvg: 5.200, springCum: 14.15 },
+            { year: 1992, jan: 1.68, feb: 1.87, mar: 4.08, apr: 1.76, may: 4.02, mayAvg: 5.714, springCum: 9.39 },
+            { year: 1993, jan: 3.44, feb: 2.81, mar: 6.64, apr: 4.28, may: 1.56, mayAvg: 5.606, springCum: 17.17 },
+            { year: 1994, jan: 5.62, feb: 3.44, mar: 6.33, apr: 2.42, may: 4.26, mayAvg: 4.410, springCum: 17.81 },
+            { year: 1995, jan: 3.75, feb: 3.13, mar: 1.26, apr: 2.29, may: 2.84, mayAvg: 3.158, springCum: 10.43 },
+            { year: 1996, jan: 5.64, feb: 2.59, mar: 3.81, apr: 6.33, may: 2.64, mayAvg: 3.064, springCum: 18.37 },
+            { year: 1997, jan: 3.65, feb: 2.54, mar: 5.18, apr: 2.86, may: 3.05, mayAvg: 2.870, springCum: 14.23 },
+            { year: 1998, jan: 5.2, feb: 5.81, mar: 5.08, apr: 7.05, may: 6.94, mayAvg: 3.946, springCum: 23.14 },
+            { year: 1999, jan: 6.99, feb: 3.49, mar: 4.01, apr: 1.93, may: 4.04, mayAvg: 3.902, springCum: 16.42 },
+            { year: 2000, jan: 3.24, feb: 1.66, mar: 3.31, apr: 3.53, may: 4.5, mayAvg: 4.234, springCum: 11.74 },
+            { year: 2001, jan: 3.16, feb: 1.95, mar: 7.72, apr: 1.58, may: 2.02, mayAvg: 4.110, springCum: 14.41 },
+            { year: 2002, jan: 1.93, feb: 0.71, mar: 3.53, apr: 3.41, may: 3.69, mayAvg: 4.238, springCum: 9.58 },
+            { year: 2003, jan: 2.3, feb: 4.56, mar: 4.57, apr: 3.2, may: 3.43, mayAvg: 3.536, springCum: 14.63 },
+            { year: 2004, jan: 2.13, feb: 2.68, mar: 2.99, apr: 4.11, may: 5.77, mayAvg: 3.882, springCum: 11.91 },
+            { year: 2005, jan: 4.67, feb: 3.04, mar: 4.96, apr: 4.81, may: 1.48, mayAvg: 3.278, springCum: 17.48 },
+            { year: 2006, jan: 4.99, feb: 2.88, mar: 0.8, apr: 5.56, may: 4.62, mayAvg: 3.798, springCum: 14.23 },
+            { year: 2007, jan: 3.63, feb: 1.99, mar: 5.35, apr: 13.05, may: 1.88, mayAvg: 3.436, springCum: 24.02 },
+            { year: 2008, jan: 2.85, feb: 5.95, mar: 4.08, apr: 2.77, may: 4.01, mayAvg: 3.552, springCum: 15.65 },
+            { year: 2009, jan: 2.98, feb: 0.93, mar: 1.75, apr: 4.69, may: 5.17, mayAvg: 3.432, springCum: 10.35 },
+            { year: 2010, jan: 2.08, feb: 6.69, mar: 10.69, apr: 2.99, may: 3.01, mayAvg: 3.738, springCum: 22.45 },
+            { year: 2011, jan: 4.93, feb: 3.47, mar: 6.19, apr: 5.35, may: 5.11, mayAvg: 3.836, springCum: 19.94 },
+            { year: 2012, jan: 3.23, feb: 1.37, mar: 0.96, apr: 3.56, may: 5.38, mayAvg: 4.536, springCum: 9.12 },
+            { year: 2013, jan: 2.76, feb: 4.25, mar: 2.9, apr: 1.31, may: 8.0, mayAvg: 5.334, springCum: 11.22 },
+            { year: 2014, jan: 2.79, feb: 5.48, mar: 3.67, apr: 7.85, may: 4.37, mayAvg: 5.174, springCum: 19.79 },
+            { year: 2015, jan: 5.23, feb: 2.04, mar: 4.72, apr: 2.08, may: 1.86, mayAvg: 4.944, springCum: 14.07 },
+            { year: 2016, jan: 4.41, feb: 4.4, mar: 1.17, apr: 1.61, may: 3.75, mayAvg: 4.672, springCum: 11.59 },
+            { year: 2017, jan: 4.83, feb: 2.48, mar: 5.25, apr: 3.84, may: 6.38, mayAvg: 4.872, springCum: 16.40 },
+            { year: 2018, jan: 2.18, feb: 5.83, mar: 5.17, apr: 5.78, may: 3.53, mayAvg: 3.978, springCum: 18.96 },
+            { year: 2019, jan: 3.58, feb: 3.14, mar: 3.87, apr: 4.55, may: 6.82, mayAvg: 4.468, springCum: 15.14 },
+            { year: 2020, jan: 1.93, feb: 2.54, mar: 3.78, apr: 4.49, may: 1.65, mayAvg: 4.426, springCum: 12.74 },
+            { year: 2021, jan: 2.31, feb: 5.13, mar: 3.41, apr: 2.69, may: 4.36, mayAvg: 4.548, springCum: 13.54 },
+            { year: 2022, jan: 4.29, feb: 3.23, mar: 2.39, apr: 4.53, may: 4.52, mayAvg: 4.176, springCum: 14.44 },
+            { year: 2023, jan: 4.38, feb: 1.28, mar: 3.32, apr: 7.7, may: 1.28, mayAvg: 3.726, springCum: 16.68 },
+            { year: 2024, jan: 5.28, feb: 2.05, mar: 9.06, apr: 3.47, may: 4.11, mayAvg: 3.184, springCum: 19.86 },
+            { year: 2025, jan: 0.61, feb: 2.6, mar: 5.52, apr: 3.25, may: 6.58, mayAvg: 4.170, springCum: 11.98 },
+            { year: 2026, jan: 2.7, feb: 2.6, mar: 3.6, apr: 2.48, may: null, mayAvg: null, springCum: 11.38 }
+        ];
+
+        const Dashboard = () => {
+            const [view, setView] = useState('mayTrend');
+            
+            // Historical Averages
+            const avgSpringCum = 15.3;
+            const avgMay = 4.2;
+
+            // Custom Tooltip for Charts
+            const CustomTooltip = ({ active, payload, label }) => {
+                if (active && payload && payload.length) {
+                    return (
+                        <div className="bg-slate-800 border border-slate-700 p-3 rounded shadow-lg text-sm">
+                            <p className="font-bold text-blue-400 mb-1">{`Year: ${label}`}</p>
+                            {payload.map((entry, index) => (
+                                <p key={index} style={{ color: entry.color }}>
+                                    {entry.name}: {entry.value ? entry.value.toFixed(2) : 'N/A'} in
+                                </p>
+                            ))}
+                        </div>
+                    );
+                }
+                return null;
+            };
+
             return (
-                <div className="bg-slate-800 border border-slate-700 p-3 rounded shadow-lg text-sm">
-                    <p className="font-bold text-blue-400 mb-1">{`Year: ${label}`}</p>
-                    {payload.map((entry, index) => (
-                        <p key={index} style={{ color: entry.color }}>
-                            {entry.name}: {entry.value ? entry.value.toFixed(2) : 'N/A'} in
+                <div className="max-w-7xl mx-auto space-y-6">
+                    {/* Header */}
+                    <div className="glass-panel p-6">
+                        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-teal-300">
+                            Central Park Rainfall Forecaster
+                        </h1>
+                        <p className="text-slate-400 mt-2">
+                            Predictive analysis for May 2026 based on 50 years of NWS precipitation records.
                         </p>
-                    ))}
+                    </div>
+
+                    {/* KPI Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="glass-panel p-6 border-l-4 border-l-blue-500">
+                            <h3 className="text-slate-400 text-sm font-semibold uppercase tracking-wide">2026 Spring To Date (Jan-Apr)</h3>
+                            <div className="mt-2 flex items-baseline">
+                                <span className="text-4xl font-bold text-white">11.38"</span>
+                                <span className="ml-2 text-sm text-red-400">-3.92" deficit</span>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1">Historically averages 15.30"</p>
+                        </div>
+                        <div className="glass-panel p-6 border-l-4 border-l-teal-500">
+                            <h3 className="text-slate-400 text-sm font-semibold uppercase tracking-wide">2025 May Precedent</h3>
+                            <div className="mt-2 flex items-baseline">
+                                <span className="text-4xl font-bold text-white">6.58"</span>
+                                <span className="ml-2 text-sm text-blue-400">+2.38" surplus</span>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1">"Post-Deluge" pattern favors wet next year</p>
+                        </div>
+                        <div className="glass-panel p-6 border-l-4 border-l-purple-500">
+                            <h3 className="text-slate-400 text-sm font-semibold uppercase tracking-wide">Historical Prob. May over 4"</h3>
+                            <div className="mt-2 flex items-baseline">
+                                <span className="text-4xl font-bold text-white">66.7%</span>
+                                <span className="ml-2 text-sm text-slate-300">Win Rate</span>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1">When Jan-Apr are all under threshold</p>
+                        </div>
+                    </div>
+
+                    {/* Navigation (removed the stray {} from here) */}
+                    <div className="flex space-x-2 border-b border-slate-700 pb-2">
+                        <button 
+                            onClick={() => setView('mayTrend')}
+                            className={`px-4 py-2 rounded-t-lg font-semibold transition-colors ${view === 'mayTrend' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                        >
+                            May Historical Trend
+                        </button>
+                        <button 
+                            onClick={() => setView('springDeficit')}
+                            className={`px-4 py-2 rounded-t-lg font-semibold transition-colors ${view === 'springDeficit' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                        >
+                            Spring Deficit Tracker
+                        </button>
+                        <button 
+                            onClick={() => setView('similarYears')}
+                            className={`px-4 py-2 rounded-t-lg font-semibold transition-colors ${view === 'similarYears' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                        >
+                            Pattern Matches
+                        </button>
+                    </div>
+
+                    {/* Chart Area (removed the stray {} from here too) */}
+                    <div className="glass-panel p-6 min-h-[500px]">
+                        
+                        {view === 'mayTrend' && (
+                            <div className="h-full flex flex-col">
+                                <div className="mb-4">
+                                    <h2 className="text-xl font-bold text-white">May Rainfall & 5-Year Averages (1976 - 2025)</h2>
+                                    <p className="text-sm text-slate-400">Visualizing the "Alternating May" volatility and regression to the 4.2" mean.</p>
+                                </div>
+                                <div className="flex-grow h-[400px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <ComposedChart data={rainfallData.slice(0, 50)} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                            <XAxis dataKey="year" stroke="#94a3b8" />
+                                            <YAxis stroke="#94a3b8" label={{ value: 'Inches', angle: -90, position: 'insideLeft', fill: '#94a3b8' }} />
+                                            <Tooltip content={<CustomTooltip />} />
+                                            <Legend />
+                                            <ReferenceLine y={4.0} stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: '4.0" Threshold', fill: '#ef4444', fontSize: 12 }} />
+                                            <Bar dataKey="may" name="May Rainfall" fill="#3b82f6" opacity={0.8} />
+                                            <Line type="monotone" dataKey="mayAvg" name="5-Year Rolling Avg" stroke="#10b981" strokeWidth={3} dot={false} />
+                                        </ComposedChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'springDeficit' && (
+                            <div className="h-full flex flex-col">
+                                <div className="mb-4">
+                                    <h2 className="text-xl font-bold text-white">Spring Accumulation (Jan - Apr) vs May Outcome</h2>
+                                    <p className="text-sm text-slate-400">Notice that 2026 (far right) is entering May with a severe deficit. Historically, heavy May rains follow these dry starts.</p>
+                                </div>
+                                <div className="flex-grow h-[400px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <ComposedChart data={rainfallData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                                            <XAxis dataKey="year" stroke="#94a3b8" />
+                                            <YAxis yAxisId="left" stroke="#94a3b8" label={{ value: 'Jan-Apr Cum. (in)', angle: -90, position: 'insideLeft', fill: '#94a3b8' }} />
+                                            <YAxis yAxisId="right" orientation="right" stroke="#94a3b8" label={{ value: 'May Rainfall (in)', angle: 90, position: 'insideRight', fill: '#94a3b8' }} />
+                                            <Tooltip content={<CustomTooltip />} />
+                                            <Legend />
+                                            <ReferenceLine yAxisId="left" y={avgSpringCum} stroke="#f59e0b" strokeDasharray="3 3" label={{ position: 'insideTopLeft', value: 'Avg Spring Start (15.3")', fill: '#f59e0b', fontSize: 12 }} />
+                                            <Area yAxisId="left" type="monotone" dataKey="springCum" name="Jan-Apr Accumulation" fill="#475569" stroke="#94a3b8" fillOpacity={0.3} />
+                                            <Bar yAxisId="right" dataKey="may" name="May Rainfall" fill="#3b82f6" maxBarSize={20} />
+                                        </ComposedChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'similarYears' && (
+                            <div className="h-full flex flex-col">
+                                <div className="mb-4">
+                                    <h2 className="text-xl font-bold text-white">The "Consistent Dry Trend" Pattern</h2>
+                                    <p className="text-sm text-slate-400">
+                                        Years matching 2026's exact profile: Jan &lt; 3.5", Feb &lt; 3.5", Mar &lt; 4.5", Apr &lt; 3.5". 
+                                        Historically results in May &gt; 4.0" 66.7% of the time.
+                                    </p>
+                                </div>
+                                <div className="overflow-x-auto mt-4">
+                                    <table className="w-full text-left text-sm text-slate-300">
+                                        <thead className="bg-slate-700/50 text-slate-200">
+                                            <tr>
+                                                <th className="p-4 rounded-tl-lg">Year Pattern</th>
+                                                <th className="p-4">January</th>
+                                                <th className="p-4">February</th>
+                                                <th className="p-4">March</th>
+                                                <th className="p-4">April</th>
+                                                <th className="p-4 font-bold text-white bg-blue-900/30 rounded-tr-lg">May Outcome</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-700">
+                                            <tr className="hover:bg-slate-800/50 transition-colors">
+                                                <td className="p-4 font-semibold text-white">1985</td>
+                                                <td className="p-4">1.00"</td>
+                                                <td className="p-4">2.41"</td>
+                                                <td className="p-4">1.91"</td>
+                                                <td className="p-4">1.41"</td>
+                                                <td className="p-4 font-bold text-blue-400 bg-blue-900/10">5.72" (&gt; 4")</td>
+                                            </tr>
+                                            <tr className="hover:bg-slate-800/50 transition-colors">
+                                                <td className="p-4 font-semibold text-white">1992</td>
+                                                <td className="p-4">1.68"</td>
+                                                <td className="p-4">1.87"</td>
+                                                <td className="p-4">4.08"</td>
+                                                <td className="p-4">1.76"</td>
+                                                <td className="p-4 font-bold text-blue-400 bg-blue-900/10">4.02" (&gt; 4")</td>
+                                            </tr>
+                                            <tr className="hover:bg-slate-800/50 transition-colors">
+                                                <td className="p-4 font-semibold text-white">2002</td>
+                                                <td className="p-4">1.93"</td>
+                                                <td className="p-4">0.71"</td>
+                                                <td className="p-4">3.53"</td>
+                                                <td className="p-4">3.41"</td>
+                                                <td className="p-4 font-bold text-red-400 bg-blue-900/10">3.69" (&lt; 4")</td>
+                                            </tr>
+                                            <tr className="border-t-2 border-slate-600 bg-slate-800">
+                                                <td className="p-4 font-bold text-amber-400">2026 (Current)</td>
+                                                <td className="p-4 text-amber-400">2.70"</td>
+                                                <td className="p-4 text-amber-400">2.60"</td>
+                                                <td className="p-4 text-amber-400">3.60"</td>
+                                                <td className="p-4 text-amber-400">2.48"</td>
+                                                <td className="p-4 font-bold text-slate-500 bg-blue-900/20 italic">Pending...</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                
+                                <div className="mt-8 p-4 border border-blue-900 bg-blue-900/20 rounded-lg">
+                                    <h4 className="text-blue-400 font-bold mb-2">💡 The 2021 "Exact Match" Anomaly</h4>
+                                    <p className="text-slate-300 text-sm">
+                                        While the table above looks at broad thresholds, if we look for the year with the 
+                                        closest exact match to the March (3.60") and April (2.48") transition, it is <strong>2021</strong> 
+                                        (Mar: 3.41", Apr: 2.69"). In 2021, May recorded <strong>4.36 inches</strong> of rain.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             );
-        }
-        return null;
-    };
+        };
 
-    return (
-        <div className="max-w-7xl mx-auto space-y-6">
-            {/* Header */}
-            <div className="glass-panel p-6">
-                <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-teal-300">
-                    Central Park Rainfall Forecaster
-                </h1>
-                <p className="text-slate-400 mt-2">
-                    Predictive analysis for May 2026 based on 50 years of NWS precipitation records.
-                </p>
-            </div>
-
-            {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="glass-panel p-6 border-l-4 border-l-blue-500">
-                    <h3 className="text-slate-400 text-sm font-semibold uppercase tracking-wide">2026 Spring To Date (Jan-Apr)</h3>
-                    <div className="mt-2 flex items-baseline">
-                        <span className="text-4xl font-bold text-white">11.38"</span>
-                        <span className="ml-2 text-sm text-red-400">-3.92" deficit</span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1">Historically averages 15.30"</p>
-                </div>
-                <div className="glass-panel p-6 border-l-4 border-l-teal-500">
-                    <h3 className="text-slate-400 text-sm font-semibold uppercase tracking-wide">2025 May Precedent</h3>
-                    <div className="mt-2 flex items-baseline">
-                        <span className="text-4xl font-bold text-white">6.58"</span>
-                        <span className="ml-2 text-sm text-blue-400">+2.38" surplus</span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1">"Post-Deluge" pattern favors wet next year</p>
-                </div>
-                <div className="glass-panel p-6 border-l-4 border-l-purple-500">
-                    <h3 className="text-slate-400 text-sm font-semibold uppercase tracking-wide">Historical Prob. May > 4"</h3>
-                    <div className="mt-2 flex items-baseline">
-                        <span className="text-4xl font-bold text-white">66.7%</span>
-                        <span className="ml-2 text-sm text-slate-300">Win Rate</span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1">When Jan-Apr are all under threshold</p>
-                </div>
-            </div>
-
-            {/* Navigation (calculator tab removed) */}
-            <div className="flex space-x-2 border-b border-slate-700 pb-2 overflow-x-auto">
-                <button 
-                    onClick={() => setView('mayTrend')}
-                    className={`px-4 py-2 whitespace-nowrap rounded-t-lg font-semibold transition-colors ${view === 'mayTrend' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
-                >
-                    May Historical Trend
-                </button>
-                <button 
-                    onClick={() => setView('springDeficit')}
-                    className={`px-4 py-2 whitespace-nowrap rounded-t-lg font-semibold transition-colors ${view === 'springDeficit' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
-                >
-                    Spring Deficit Tracker
-                </button>
-                <button 
-                    onClick={() => setView('similarYears')}
-                    className={`px-4 py-2 whitespace-nowrap rounded-t-lg font-semibold transition-colors ${view === 'similarYears' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'}`}
-                >
-                    Pattern Matches
-                </button>
-            </div>
-
-            {/* Chart Area (calculator no longer inside here) */}
-            <div className="glass-panel p-6 min-h-[500px]">
-                {view === 'mayTrend' && (
-                    <div className="h-full flex flex-col">
-                        <div className="mb-4">
-                            <h2 className="text-xl font-bold text-white">May Rainfall & 5-Year Averages (1976 - 2025)</h2>
-                            <p className="text-sm text-slate-400">Visualizing the "Alternating May" volatility and regression to the 4.2" mean.</p>
-                        </div>
-                        <div className="flex-grow h-[400px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <ComposedChart data={rainfallData.slice(0, 50)} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                    <XAxis dataKey="year" stroke="#94a3b8" />
-                                    <YAxis stroke="#94a3b8" label={{ value: 'Inches', angle: -90, position: 'insideLeft', fill: '#94a3b8' }} />
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Legend />
-                                    <ReferenceLine y={4.0} stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'top', value: '4.0" Threshold', fill: '#ef4444', fontSize: 12 }} />
-                                    <Bar dataKey="may" name="May Rainfall" fill="#3b82f6" opacity={0.8} />
-                                    <Line type="monotone" dataKey="mayAvg" name="5-Year Rolling Avg" stroke="#10b981" strokeWidth={3} dot={false} />
-                                </ComposedChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
-                )}
-
-                {view === 'springDeficit' && (
-                    <div className="h-full flex flex-col">
-                        <div className="mb-4">
-                            <h2 className="text-xl font-bold text-white">Spring Accumulation (Jan - Apr) vs May Outcome</h2>
-                            <p className="text-sm text-slate-400">Notice that 2026 (far right) is entering May with a severe deficit. Historically, heavy May rains follow these dry starts.</p>
-                        </div>
-                        <div className="flex-grow h-[400px]">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <ComposedChart data={rainfallData} margin={{ top: 20, right: 30, left: 0, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                                    <XAxis dataKey="year" stroke="#94a3b8" />
-                                    <YAxis yAxisId="left" stroke="#94a3b8" label={{ value: 'Jan-Apr Cum. (in)', angle: -90, position: 'insideLeft', fill: '#94a3b8' }} />
-                                    <YAxis yAxisId="right" orientation="right" stroke="#94a3b8" label={{ value: 'May Rainfall (in)', angle: 90, position: 'insideRight', fill: '#94a3b8' }} />
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Legend />
-                                    <ReferenceLine yAxisId="left" y={avgSpringCum} stroke="#f59e0b" strokeDasharray="3 3" label={{ position: 'insideTopLeft', value: 'Avg Spring Start (15.3")', fill: '#f59e0b', fontSize: 12 }} />
-                                    <Area yAxisId="left" type="monotone" dataKey="springCum" name="Jan-Apr Accumulation" fill="#475569" stroke="#94a3b8" fillOpacity={0.3} />
-                                    <Bar yAxisId="right" dataKey="may" name="May Rainfall" fill="#3b82f6" maxBarSize={20} />
-                                </ComposedChart>
-                            </ResponsiveContainer>
-                        </div>
-                    </div>
-                )}
-
-                {view === 'similarYears' && (
-                    <div className="h-full flex flex-col">
-                        <div className="mb-4">
-                            <h2 className="text-xl font-bold text-white">The "Consistent Dry Trend" Pattern</h2>
-                            <p className="text-sm text-slate-400">
-                                Years matching 2026's exact profile: Jan &lt; 3.5", Feb &lt; 3.5", Mar &lt; 4.5", Apr &lt; 3.5". 
-                                Historically results in May &gt; 4.0" 66.7% of the time.
-                            </p>
-                        </div>
-                        <div className="overflow-x-auto mt-4">
-                            <table className="w-full text-left text-sm text-slate-300">
-                                <thead className="bg-slate-700/50 text-slate-200">
-                                    <tr>
-                                        <th className="p-4 rounded-tl-lg">Year Pattern</th>
-                                        <th className="p-4">January</th>
-                                        <th className="p-4">February</th>
-                                        <th className="p-4">March</th>
-                                        <th className="p-4">April</th>
-                                        <th className="p-4 font-bold text-white bg-blue-900/30 rounded-tr-lg">May Outcome</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-700">
-                                    <tr className="hover:bg-slate-800/50 transition-colors">
-                                        <td className="p-4 font-semibold text-white">1985</td>
-                                        <td className="p-4">1.00"</td>
-                                        <td className="p-4">2.41"</td>
-                                        <td className="p-4">1.91"</td>
-                                        <td className="p-4">1.41"</td>
-                                        <td className="p-4 font-bold text-blue-400 bg-blue-900/10">5.72" (&gt; 4")</td>
-                                    </tr>
-                                    <tr className="hover:bg-slate-800/50 transition-colors">
-                                        <td className="p-4 font-semibold text-white">1992</td>
-                                        <td className="p-4">1.68"</td>
-                                        <td className="p-4">1.87"</td>
-                                        <td className="p-4">4.08"</td>
-                                        <td className="p-4">1.76"</td>
-                                        <td className="p-4 font-bold text-blue-400 bg-blue-900/10">4.02" (&gt; 4")</td>
-                                    </tr>
-                                    <tr className="hover:bg-slate-800/50 transition-colors">
-                                        <td className="p-4 font-semibold text-white">2002</td>
-                                        <td className="p-4">1.93"</td>
-                                        <td className="p-4">0.71"</td>
-                                        <td className="p-4">3.53"</td>
-                                        <td className="p-4">3.41"</td>
-                                        <td className="p-4 font-bold text-red-400 bg-blue-900/10">3.69" (&lt; 4")</td>
-                                    </tr>
-                                    <tr className="border-t-2 border-slate-600 bg-slate-800">
-                                        <td className="p-4 font-bold text-amber-400">2026 (Current)</td>
-                                        <td className="p-4 text-amber-400">2.70"</td>
-                                        <td className="p-4 text-amber-400">2.60"</td>
-                                        <td className="p-4 text-amber-400">3.60"</td>
-                                        <td className="p-4 text-amber-400">2.48"</td>
-                                        <td className="p-4 font-bold text-slate-500 bg-blue-900/20 italic">Pending...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <div className="mt-8 p-4 border border-blue-900 bg-blue-900/20 rounded-lg">
-                            <h4 className="text-blue-400 font-bold mb-2">💡 The 2021 "Exact Match" Anomaly</h4>
-                            <p className="text-slate-300 text-sm">
-                                While the table above looks at broad thresholds, if we look for the year with the 
-                                closest exact match to the March (3.60") and April (2.48") transition, it is <strong>2021</strong> 
-                                (Mar: 3.41", Apr: 2.69"). In 2021, May recorded <strong>4.36 inches</strong> of rain.
-                            </p>
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Position Calculator – now permanently at the bottom of the page */}
-            <PositionCalculator />
-        </div>
-    );
-};
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<Dashboard />);
+    </script>
+</body>
+</html>
