@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Precipitation Transition: May to June</title>
+		<script src="https://cdn.tailwindcss.com"></script>
+		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+		<link
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+			rel="stylesheet" />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+			rel="stylesheet" />
+
+		<script>
+			tailwind.config = {
+				theme: {
+					extend: {
+						fontFamily: {
+							sans: ["Inter", "sans-serif"],
+						},
+						colors: {
+							brand: {
+								dark: "#0f172a",
+								panel: "#1e293b",
+								accent: "#38bdf8",
+								warning: "#fb923c",
+								danger: "#ef4444",
+								success: "#10b981",
+							},
+						},
+						animation: {
+							"pulse-slow":
+								"pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+						},
+					},
+				},
+			};
+		</script>
+		<style>
+			body {
+				background-color: #0f172a;
+				color: #f8fafc;
+				overflow-x: hidden;
+			}
+
+			.glass-panel {
+				background: rgba(30, 41, 59, 0.7);
+				backdrop-filter: blur(10px);
+				border: 1px solid rgba(255, 255, 255, 0.1);
+				border-radius: 1rem;
+				box-shadow:
+					0 4px 6px -1px rgba(0, 0, 0, 0.1),
+					0 2px 4px -1px rgba(0, 0, 0, 0.06);
+			}
+
+			.progress-bar-container {
+				width: 100%;
+				background-color: #334155;
+				border-radius: 9999px;
+				overflow: hidden;
+				height: 1.5rem;
+				position: relative;
+			}
+
+			.progress-bar-fill {
+				height: 100%;
+				background: linear-gradient(90deg, #38bdf8, #fb923c);
+				transition: width 1.5s ease-out;
+				width: 0%; /* Starts at 0 for animation */
+			}
+
+			.target-marker {
+				position: absolute;
+				top: 0;
+				bottom: 0;
+				width: 4px;
+				background-color: #ef4444;
+				left: 100%; /* Represents the 4" mark, assuming max scale is slightly higher for visual */
+				transform: translateX(-50%);
+				z-index: 10;
+			}
+
+			.target-marker::after {
+				content: '4.0" TARGET';
+				position: absolute;
+				top: -25px;
+				left: 50%;
+				transform: translateX(-50%);
+				font-size: 0.75rem;
+				font-weight: bold;
+				color: #ef4444;
+				white-space: nowrap;
+			}
+
+			/* Modal Styles */
+			#modal-overlay {
+				display: none;
+				position: fixed;
+				inset: 0;
+				background: rgba(0, 0, 0, 0.7);
+				backdrop-filter: blur(5px);
+				z-index: 50;
+				justify-content: center;
+				align-items: center;
+			}
+
+			.modal-content {
+				transform: scale(0.95);
+				opacity: 0;
+				transition: all 0.3s ease-out;
+			}
+
+			#modal-overlay.active {
+				display: flex;
+			}
+
+			#modal-overlay.active .modal-content {
+				transform: scale(1);
+				opacity: 1;
+			}
+
+			.gradient-text {
+				background: linear-gradient(to right, #38bdf8, #fb923c);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+			}
+		</style>
+	</head>
+	<body
+		class="antialiased min-h-screen p-4 md:p-8 flex flex-col items-center">
+		<header
+			class="w-full max-w-6xl mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+			<div>
+				<h1 class="text-3xl font-bold tracking-tight text-white">
+					Project Transition
+					<span class="text-brand-warning">| May to June</span>
+				</h1>
+				<p class="text-slate-400 mt-1">
+					Evaluating the spring deficit and preparing for summer
+					dynamics.
+				</p>
+			</div>
+			<div class="text-right">
+				<p class="text-sm text-slate-500 font-mono">
+					SYSTEM_DATE: MAY 29, 2026
+				</p>
+				<p class="text-sm text-slate-500 font-mono">
+					LOCATION: NYC METRO
+				</p>
+			</div>
+		</header>
+
+		<main class="w-full max-w-6xl space-y-6">
+			<!-- Special Transition Message Banner -->
+			<div
+				class="glass-panel p-6 border-l-4 border-l-brand-warning relative overflow-hidden group">
+				<div
+					class="absolute -right-10 -top-10 text-brand-warning opacity-10 group-hover:scale-110 transition-transform duration-700">
+					<i class="fas fa-exclamation-triangle text-9xl"></i>
+				</div>
+				<div
+					class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+					<div class="flex-1">
+						<h2
+							class="text-xl font-bold text-brand-warning mb-2 flex items-center gap-2">
+							<i class="fas fa-broadcast-tower animate-pulse"></i>
+							May Target Missed – Transitioning Focus
+						</h2>
+						<p class="text-slate-300 leading-relaxed">
+							With May closing significantly below our critical
+							4.0-inch rainfall threshold, the hydrological
+							baseline has shifted. We are sunsetting the May
+							Rainfall Tracker.
+							<strong class="text-white"
+								>Our new focus is the June Heat & Hydrology
+								Dashboard</strong
+							>, which is currently being constructed to monitor
+							the resulting soil desiccation, heat dome
+							amplification, and flash flood risks.
+						</p>
+					</div>
+					<div>
+						<button
+							onclick="openModal()"
+							class="bg-gradient-to-r from-brand-warning to-red-500 hover:from-brand-danger hover:to-orange-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 whitespace-nowrap flex items-center gap-2">
+							<span>Access June Dashboard</span>
+							<i class="fas fa-arrow-right"></i>
+						</button>
+					</div>
+				</div>
+			</div>
+
+			<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+				<!-- May Data Summary -->
+				<div
+					class="glass-panel p-6 lg:col-span-1 flex flex-col justify-between">
+					<div>
+						<h3
+							class="text-lg font-semibold text-slate-200 mb-4 border-b border-slate-700 pb-2">
+							<i
+								class="fas fa-chart-bar text-brand-accent mr-2"></i
+							>May Precipitation Close-Out
+						</h3>
+
+						<div class="mb-6 mt-8">
+							<div class="flex justify-between text-sm mb-1">
+								<span class="text-slate-400"
+									>Actual Accumulated</span
+								>
+								<span class="text-brand-warning font-bold"
+									>1.85" / 4.00"</span
+								>
+							</div>
+							<div class="progress-bar-container mt-6">
+								<!-- Container scaled to 5" max to show the 4" mark cleanly -->
+								<div
+									class="target-marker"
+									style="left: 80%"></div>
+								<div
+									class="progress-bar-fill"
+									id="mayProgress"
+									style="width: 0%"
+									data-target="37%"></div>
+								<!-- 1.85 is 37% of 5 -->
+							</div>
+							<div
+								class="flex justify-between text-xs text-slate-500 mt-2">
+								<span>0.0"</span>
+								<span>Scale Max: 5.0"</span>
+							</div>
+						</div>
+
+						<div class="grid grid-cols-2 gap-4 mt-6">
+							<div
+								class="bg-slate-800 rounded p-3 text-center border border-slate-700">
+								<p class="text-xs text-slate-400 mb-1">
+									Total Deficit
+								</p>
+								<p class="text-xl font-bold text-brand-danger">
+									-2.15"
+								</p>
+							</div>
+							<div
+								class="bg-slate-800 rounded p-3 text-center border border-slate-700">
+								<p class="text-xs text-slate-400 mb-1">
+									Dry Days
+								</p>
+								<p class="text-xl font-bold text-brand-warning">
+									23
+								</p>
+							</div>
+						</div>
+					</div>
+					<div
+						class="mt-6 text-sm text-slate-400 bg-slate-800/50 p-3 rounded border border-slate-700/50">
+						<i class="fas fa-info-circle text-brand-accent"></i>
+						<strong>Conclusion:</strong> Significant spring deficit
+						confirmed. Soils entering June in pre-drought
+						conditions.
+					</div>
+				</div>
+
+				<div class="glass-panel p-6 lg:col-span-2">
+					<h3
+						class="text-lg font-semibold text-slate-200 mb-4 border-b border-slate-700 pb-2">
+						<i class="fas fa-binoculars text-brand-warning mr-2"></i
+						>June Prognostic Insights
+					</h3>
+
+					<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+						<!-- Insight 1 -->
+						<div
+							class="bg-slate-800/80 p-4 rounded-lg border border-slate-700 hover:border-brand-warning transition-colors">
+							<div
+								class="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center mb-3">
+								<i
+									class="fas fa-temperature-high text-orange-400 text-lg"></i>
+							</div>
+							<h4 class="font-semibold text-white mb-2">
+								Heat Amplification
+							</h4>
+							<p class="text-sm text-slate-400">
+								Missing May rain removes evaporative cooling.
+								Solar energy will directly heat dry soils,
+								raising expected June averages by +2.5°F to
+								+4°F.
+							</p>
+						</div>
+						<!-- Insight 2 -->
+						<div
+							class="bg-slate-800/80 p-4 rounded-lg border border-slate-700 hover:border-brand-accent transition-colors">
+							<div
+								class="w-10 h-10 rounded-full bg-sky-500/20 flex items-center justify-center mb-3">
+								<i
+									class="fas fa-cloud-sun text-sky-400 text-lg"></i>
+							</div>
+							<h4 class="font-semibold text-white mb-2">
+								High-Pressure Ridging
+							</h4>
+							<p class="text-sm text-slate-400">
+								The atmospheric block that kept May dry is
+								persisting. Expect extended stagnation, trapping
+								heat and degrading urban air quality early in
+								the month.
+							</p>
+						</div>
+						<!-- Insight 3 -->
+						<div
+							class="bg-slate-800/80 p-4 rounded-lg border border-slate-700 hover:border-brand-danger transition-colors">
+							<div
+								class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center mb-3">
+								<i
+									class="fas fa-water text-red-400 text-lg"></i>
+							</div>
+							<h4 class="font-semibold text-white mb-2">
+								Flash Flood Risk
+							</h4>
+							<p class="text-sm text-slate-400">
+								Baked, hardened topsoil acts like concrete. When
+								isolated thunderstorms do occur, surface runoff
+								velocity will be 30% higher than normal.
+							</p>
+						</div>
+					</div>
+
+					<div
+						class="bg-slate-800 rounded-lg p-4 border border-slate-700 h-64 relative w-full">
+						<canvas id="juneProjectionChart"></canvas>
+					</div>
+					<p class="text-xs text-center text-slate-500 mt-2">
+						Fig 1. Projected June Temperatures vs Historical
+						Averages (Driven by May Deficit)
+					</p>
+				</div>
+			</div>
+		</main>
+
+		<div id="modal-overlay">
+			<div
+				class="modal-content glass-panel p-8 max-w-md w-full text-center relative border-brand-warning shadow-[0_0_30px_rgba(251,146,60,0.2)]">
+				<button
+					onclick="closeModal()"
+					class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+					<i class="fas fa-times text-xl"></i>
+				</button>
+
+				<div
+					class="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-brand-warning">
+					<i
+						class="fas fa-hammer text-3xl text-brand-warning animate-bounce"></i>
+				</div>
+
+				<h2 class="text-2xl font-bold text-white mb-2">
+					June Dashboard
+				</h2>
+				<h3 class="text-lg gradient-text font-semibold mb-4">
+					Under Construction
+				</h3>
+
+				<p class="text-slate-300 text-sm mb-6">
+					The new <strong>June Heat & Hydrology Dashboard</strong> is
+					currently being compiled by the engineering team. It will
+					feature real-time soil desiccation tracking, heat-dome
+					probability metrics, and localized flood warnings.
+				</p>
+
+				<div
+					class="bg-slate-800 rounded p-3 mb-6 flex items-center justify-center gap-3">
+					<i class="fas fa-spinner fa-spin text-brand-accent"></i>
+					<span class="text-sm text-slate-400 font-mono"
+						>Calibrating sensors for June 1st launch...</span
+					>
+				</div>
+
+				<button
+					onclick="closeModal()"
+					class="w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded transition-colors">
+					Return to Transition View
+				</button>
+			</div>
+		</div>
+
+		<script>
+			// Modal Logic
+			const modal = document.getElementById("modal-overlay");
+
+			function openModal() {
+				modal.classList.add("active");
+			}
+
+			function closeModal() {
+				modal.classList.remove("active");
+			}
+
+			// Close modal on outside click
+			modal.addEventListener("click", (e) => {
+				if (e.target === modal) {
+					closeModal();
+				}
+			});
+
+			window.onload = function () {
+				// Animate Progress Bar
+				setTimeout(() => {
+					const bar = document.getElementById("mayProgress");
+					bar.style.width = bar.getAttribute("data-target");
+				}, 500);
+
+				// Initialize Chart.js
+				const ctx = document
+					.getElementById("juneProjectionChart")
+					.getContext("2d");
+
+				Chart.defaults.color = "#94a3b8";
+				Chart.defaults.font.family = "'Inter', sans-serif";
+
+				new Chart(ctx, {
+					type: "line",
+					data: {
+						labels: [
+							"June 1",
+							"June 5",
+							"June 10",
+							"June 15",
+							"June 20",
+							"June 25",
+							"June 30",
+						],
+						datasets: [
+							{
+								label: "Projected Temp (°F) - Dry Soil Model",
+								data: [78, 82, 88, 92, 89, 94, 91],
+								borderColor: "#ef4444",
+								backgroundColor: "rgba(239, 68, 68, 0.1)",
+								borderWidth: 3,
+								tension: 0.4,
+								fill: true,
+								pointBackgroundColor: "#ef4444",
+								pointRadius: 4,
+								pointHoverRadius: 6,
+							},
+							{
+								label: "Historical Avg Temp (°F)",
+								data: [75, 76, 78, 80, 81, 83, 84],
+								borderColor: "#38bdf8",
+								borderDash: [5, 5],
+								borderWidth: 2,
+								tension: 0.4,
+								fill: false,
+								pointRadius: 0,
+							},
+						],
+					},
+					options: {
+						responsive: true,
+						maintainAspectRatio: false,
+						plugins: {
+							legend: {
+								position: "top",
+								align: "end",
+								labels: {
+									boxWidth: 12,
+									usePointStyle: true,
+									padding: 20,
+								},
+							},
+							tooltip: {
+								backgroundColor: "rgba(15, 23, 42, 0.9)",
+								titleColor: "#fff",
+								bodyColor: "#cbd5e1",
+								borderColor: "#334155",
+								borderWidth: 1,
+								padding: 10,
+							},
+						},
+						scales: {
+							y: {
+								beginAtZero: false,
+								min: 65,
+								max: 100,
+								grid: {
+									color: "rgba(51, 65, 85, 0.5)",
+									drawBorder: false,
+								},
+								title: {
+									display: true,
+									text: "Temperature (°F)",
+								},
+							},
+							x: {
+								grid: {
+									display: false,
+									drawBorder: false,
+								},
+							},
+						},
+						interaction: {
+							mode: "index",
+							intersect: false,
+						},
+					},
+				});
+			};
+		</script>
+	</body>
+</html>
